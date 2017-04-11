@@ -55,14 +55,15 @@ local function format(func, method, params)
     assert(type(func) == 'string', 'Use function name, not address') 
     assert(type(params) == 'table', 'Params should be a table')
     local f = ''
-    if func == 'sendMessage' then
-        if method == 'url_query' then
-            for k, v in pairs(params) do
-                f = f .. '&' .. k .. '=' .. v
-            end
+    if method == 'url_query' then
+        for k, v in pairs(params) do
+            f = f .. '&' .. k .. '=' .. v
         end
     end
     return f
+end
+
+local function request(bot, method)
 end
 
 local function setService(bot, serviceType)
@@ -89,6 +90,23 @@ local function setService(bot, serviceType)
     end
 end
 
+--[[
+function archetype
+    local parsedBody, body, code, headers, status, f   
+    if self.method == 'url_query' then
+    elseif self.method == 'application/x-www-form' then
+    elseif self.method == 'application/json' then
+    elseif self.method == 'multipart/form-data' then 
+    end
+
+url_query archetype
+    f = format('', self.method, options or {})
+    body, code, headers, status = https.request(API.url .. self.token .. '/?')
+    parsedBody = JSON.decode(body)
+    assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
+]]--
+
+-- Create a new Telegram BOT instance, using the BOT token.
 function API.new(token, method)
     local inst = {}
     setmetatable(inst, API)
@@ -112,11 +130,22 @@ function API.new(token, method)
     return inst
 end
 
+-- Get basic informations from your bot
 function API:getMe()
-    local body, code, headers, status = https.request(API.url .. self.token .. '/getMe')
-    return JSON.decode(body)
+    local parsedBody, body, code, headers, status, f
+     if self.method == 'url_query' then
+        f = format('sendMessage', self.method, options or {})
+        body, code, headers, status = https.request(API.url .. self.token .. '/getMe')
+        parsedBody = JSON.decode(body)
+        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
+    elseif self.method == 'application/x-www-form' then
+    elseif self.method == 'application/json' then
+    elseif self.method == 'multipart/form-data' then
+    end
+    return body, parsedBody
 end
 
+-- Send message to a chat
 function API:sendMessage(chat_id, text, options)
     --[[
         Optional parameters of sendMessage:
@@ -132,7 +161,7 @@ function API:sendMessage(chat_id, text, options)
     elseif self.method == 'application/json' then
     elseif self.method == 'multipart/form-data' then
     end
-    return parsedBody
+    return body, parsedBody
 end
 
 -- Forward message from a chat to another chat
@@ -151,6 +180,41 @@ function API:forwardMessage(chat_id, from_chat_id, message_id, options)
     elseif self.method == 'application/json' then
     elseif self.method == 'multipart/form-data' then
     end
+    return body, parsedBody    
+end
+
+-- Download a file sent to the bot
+function API:getFile(file_id, filename)
+    local parsedBody, body, code, headers, status, f, file, body2, code2
+    if self.method == 'url_query' then
+        f = format('', self.method, options or {})
+        body, code, headers, status = https.request(API.url .. self.token .. '/getFile?file_id=' .. file_id)
+        parsedBody = JSON.decode(body)
+        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
+        file = assert(io.open(filename, 'wb'), 'Error opening file')
+        local _body, _code, _headers, _status = https.request('https://api.telegram.org/file/bot' .. self.token .. '/' .. parsedBody.result.file_path)
+        assert(_code == 200, 'Error: ' .. (_status or ''))
+        file:write(_body)
+        file:close()
+    elseif self.method == 'application/x-www-form' then
+    elseif self.method == 'application/json' then
+    elseif self.method == 'multipart/form-data' then 
+    end
+    return body, parsedBody
+end
+
+function API:getUpdates(options)
+    local parsedBody, body, code, headers, status, f   
+    if self.method == 'url_query' then
+        f = format('getUpdates', self.method, options or {})
+        body, code, headers, status = https.request(API.url .. self.token .. '/getUpdates?' .. f)
+        parsedBody = JSON.decode(body)
+        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
+    elseif self.method == 'application/x-www-form' then
+    elseif self.method == 'application/json' then
+    elseif self.method == 'multipart/form-data' then 
+    end
+    return body, parsedBody
 end
 
 -- Add to BOT answer commands list a commandText and function
@@ -165,6 +229,7 @@ function API:setUpdates(bool)
         setService(self, "update")
     end
 end
+
 
 -- Set the bot to an specific webhook
 function API:setWebhook()
