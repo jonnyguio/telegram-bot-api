@@ -184,18 +184,13 @@ function API:forwardMessage(chat_id, from_chat_id, message_id, options)
 end
 
 -- Download a file sent to the bot
-function API:getFile(file_id, filename)
+function API:getFile(file_id)
     local parsedBody, body, code, headers, status, f, file, body2, code2
     if self.method == 'url_query' then
         f = format('', self.method, options or {})
         body, code, headers, status = https.request(API.url .. self.token .. '/getFile?file_id=' .. file_id)
         parsedBody = JSON.decode(body)
         assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-        file = assert(io.open(filename, 'wb'), 'Error opening file')
-        local _body, _code, _headers, _status = https.request('https://api.telegram.org/file/bot' .. self.token .. '/' .. parsedBody.result.file_path)
-        assert(_code == 200, 'Error: ' .. (_status or ''))
-        file:write(_body)
-        file:close()
     elseif self.method == 'application/x-www-form' then
     elseif self.method == 'application/json' then
     elseif self.method == 'multipart/form-data' then 
@@ -230,6 +225,14 @@ function API:setUpdates(bool)
     end
 end
 
+function API:downloadFile(file_id, filename)
+    local body, parsedBody = self:getFile(file_id)
+    file = assert(io.open(filename, 'wb'), 'Error opening file')
+    local _body, _code, _headers, _status = https.request('https://api.telegram.org/file/bot' .. self.token .. '/' .. parsedBody.result.file_path)
+    assert(_code == 200, 'Error: ' .. (_status or ''))
+    file:write(_body)
+    file:close()
+end
 
 -- Set the bot to an specific webhook
 function API:setWebhook()
