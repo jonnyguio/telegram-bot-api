@@ -63,7 +63,18 @@ local function format(func, method, params)
     return f
 end
 
-local function request(bot, method)
+local function request(bot, method, options)
+    local parsedBody, body, code, headers, status, f   
+    if bot.method == 'url_query' then
+        f = format('', bot.method, options or {})
+        body, code, headers, status = https.request(API.url .. bot.token .. '/' .. method .. '?' .. f)
+        parsedBody = JSON.decode(body)
+        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
+    elseif bot.method == 'application/x-www-form' then
+    elseif bot.method == 'application/json' then
+    elseif bot.method == 'multipart/form-data' then 
+    end
+    return body, parsedBody, code, headers, status
 end
 
 local function setService(bot, serviceType)
@@ -132,17 +143,7 @@ end
 
 -- Get basic informations from your bot
 function API:getMe()
-    local parsedBody, body, code, headers, status, f
-     if self.method == 'url_query' then
-        f = format('sendMessage', self.method, options or {})
-        body, code, headers, status = https.request(API.url .. self.token .. '/getMe')
-        parsedBody = JSON.decode(body)
-        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-    elseif self.method == 'application/x-www-form' then
-    elseif self.method == 'application/json' then
-    elseif self.method == 'multipart/form-data' then
-    end
-    return body, parsedBody
+    return request(self, 'getMe')
 end
 
 -- Send message to a chat
@@ -151,17 +152,10 @@ function API:sendMessage(chat_id, text, options)
         Optional parameters of sendMessage:
             parse_mode, disable_web_page_preview, disable_notification, reply_to_message_id, reply_markup
     ]]--
-    local parsedBody, body, code, headers, status, f
-    if self.method == 'url_query' then
-        f = format('sendMessage', self.method, options or {})
-        body, code, headers, status = https.request(API.url .. self.token .. '/sendMessage?chat_id=' .. chat_id .. '&text=' .. text .. f)
-        parsedBody = JSON.decode(body)
-        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-    elseif self.method == 'application/x-www-form' then
-    elseif self.method == 'application/json' then
-    elseif self.method == 'multipart/form-data' then
-    end
-    return body, parsedBody
+    assert(chat_id and text, 'Error: no chat or text message specified in sendMessage')
+    options['chat_id'] = chat_id
+    options['text'] = text
+    return request(self, 'sendMessage', options)
 end
 
 -- Forward message from a chat to another chat
@@ -170,46 +164,23 @@ function API:forwardMessage(chat_id, from_chat_id, message_id, options)
         Optional parameters of forwardMessage
             disable_notification	
     ]]--
-    local parsedBody, body, code, headers, status, f
-    if self.method == 'url_query' then
-        f = format('forwardMessage', self.method, options or {})
-        body, code, headers, status = https.request(API.url .. self.token .. '/forwardMessage?chat_id=' .. chat_id .. '&from_chat_id=' .. from_chat_id .. '&message_id=' .. message_id .. f)
-        parsedBody = JSON.decode(body)
-        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-    elseif self.method == 'application/x-www-form' then
-    elseif self.method == 'application/json' then
-    elseif self.method == 'multipart/form-data' then
-    end
-    return body, parsedBody    
+    assert(chat_id, 'Error: receiver chat not specified in forwardMessage')
+    assert(from_chat_id, 'Error: sender chat not specified in forwardMessage')
+    assert(message_id, 'Error: message not specified in forwardMessage')
+    options['chat_id'] = chat_id
+    options['from_chat_id'] = from_chat_id
+    options['message_id'] = message_id
+    return request(self, 'forwardMessage', options)
 end
 
 -- Download a file sent to the bot
 function API:getFile(file_id)
-    local parsedBody, body, code, headers, status, f, file, body2, code2
-    if self.method == 'url_query' then
-        f = format('', self.method, options or {})
-        body, code, headers, status = https.request(API.url .. self.token .. '/getFile?file_id=' .. file_id)
-        parsedBody = JSON.decode(body)
-        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-    elseif self.method == 'application/x-www-form' then
-    elseif self.method == 'application/json' then
-    elseif self.method == 'multipart/form-data' then 
-    end
-    return body, parsedBody
+    assert(file_id, 'Error: no file specified')
+    return request(self, 'getFile', {['file_id'] = file_id})
 end
 
 function API:getUpdates(options)
-    local parsedBody, body, code, headers, status, f   
-    if self.method == 'url_query' then
-        f = format('getUpdates', self.method, options or {})
-        body, code, headers, status = https.request(API.url .. self.token .. '/getUpdates?' .. f)
-        parsedBody = JSON.decode(body)
-        assert(parsedBody.ok, 'Error: ' .. (parsedBody.description or ''))
-    elseif self.method == 'application/x-www-form' then
-    elseif self.method == 'application/json' then
-    elseif self.method == 'multipart/form-data' then 
-    end
-    return body, parsedBody
+    return request(self, 'getUpdates', options)
 end
 
 -- Add to BOT answer commands list a commandText and function
@@ -218,15 +189,15 @@ function API:addCommand(commandText, func)
 end
 
 -- Just set the bot to receive updates
-function API:setUpdates(bool)
-    if not self.webhookOn then
-        self.updatesOn = bool
-        setService(self, "update")
-    end
-end
+-- function API:setUpdates(bool)
+--     if not self.webhookOn then
+--         self.updatesOn = bool
+--         setService(self, "update")
+--     end
+-- end
 
 function API:downloadFile(file_id, filename)
-    local body, parsedBody = self:getFile(file_id)
+    local body, parsedBody = request(self, 'getFile', {['file_id'] = file_id})
     file = assert(io.open(filename, 'wb'), 'Error opening file')
     local _body, _code, _headers, _status = https.request('https://api.telegram.org/file/bot' .. self.token .. '/' .. parsedBody.result.file_path)
     assert(_code == 200, 'Error: ' .. (_status or ''))
@@ -235,9 +206,9 @@ function API:downloadFile(file_id, filename)
 end
 
 -- Set the bot to an specific webhook
-function API:setWebhook()
-    if not self.updatesOn then
-    end
-end
+-- function API:setWebhook()
+--     if not self.updatesOn then
+--     end
+-- end
 
 return API
