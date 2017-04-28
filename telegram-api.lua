@@ -10,6 +10,7 @@
 
 local https = require 'ssl.https'
 local JSON = require 'json'
+local multipart = require 'multipart'
 
 --[[
     functions to implement
@@ -153,6 +154,7 @@ function API:sendMessage(chat_id, text, options)
             parse_mode, disable_web_page_preview, disable_notification, reply_to_message_id, reply_markup
     ]]--
     assert(chat_id and text, 'Error: no chat or text message specified in sendMessage')
+    options = options or {}
     options['chat_id'] = chat_id
     options['text'] = text
     return request(self, 'sendMessage', options)
@@ -172,6 +174,13 @@ function API:forwardMessage(chat_id, from_chat_id, message_id, options)
     options['message_id'] = message_id
     return request(self, 'forwardMessage', options)
 end
+
+-- Sendo photo to a chat
+function API:sendPhoto(chat_id, photo, options)
+    assert(chat_id, 'Error: chat_id not specified in sendPhoto')
+    assert(type(photo) == "string", 'Error: no string')
+
+end 
 
 -- Download a file sent to the bot
 function API:getFile(file_id)
