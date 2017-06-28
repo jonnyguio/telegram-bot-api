@@ -169,6 +169,7 @@ function API:forwardMessage(chat_id, from_chat_id, message_id, options)
     assert(chat_id, 'Error: receiver chat not specified in forwardMessage')
     assert(from_chat_id, 'Error: sender chat not specified in forwardMessage')
     assert(message_id, 'Error: message not specified in forwardMessage')
+    options = options or {}
     options['chat_id'] = chat_id
     options['from_chat_id'] = from_chat_id
     options['message_id'] = message_id
@@ -181,6 +182,15 @@ function API:sendPhoto(chat_id, photo, options)
     assert(type(photo) == "string", 'Error: no string')
 
 end 
+
+function API:sendSticker(chat_id, sticker_id, options)
+    assert(chat_id, 'Error: receiver chat not specified in sendSticker')
+    assert(sticker_id, 'Error: file_id not specified in sendSticker')
+    options = options or {}
+    options['chat_id'] = chat_id
+    options['sticker'] = sticker_id 	
+    return request(self, 'sendSticker', options)
+end
 
 -- Download a file sent to the bot
 function API:getFile(file_id)
