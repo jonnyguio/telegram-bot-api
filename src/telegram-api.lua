@@ -20,7 +20,7 @@ local multipart = require 'multipart'
         sendPhoto
         sendAudio
         sendDocument
-        sendSticker
+        sendSticker [x]
         sendVideo
         sendLocation
         sendVenue
