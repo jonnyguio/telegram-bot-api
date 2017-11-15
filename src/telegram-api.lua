@@ -122,11 +122,10 @@ url_query archetype
 function API.new(token, method)
     local inst = {}
     setmetatable(inst, API)
-
     local body, code, headers, status = https.request(API.url .. token .. '/getMe')
     local parsedBody = JSON.decode(body)
     assert(parsedBody.ok, 'Error: Wrong Token')
-    assert(method == nil or method == 'url_query' or method == 'application/json' or method == 'application/x-www-form' or method == 'multipart/form-data', 'Invalid method to format')
+    -- assert((method ~= 'url-query'), 'Invalid method to format')
 
     inst.firstname = parsedBody.result.first_name
     inst.username = parsedBody.result.username
@@ -199,6 +198,13 @@ function API:getFile(file_id)
 end
 
 function API:getUpdates(options)
+    --[[
+        Optional parameters:
+            offset,
+            limit,
+            timeout,
+            allowed_updates
+    ]]
     return request(self, 'getUpdates', options)
 end
 

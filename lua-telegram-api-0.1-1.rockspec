@@ -23,6 +23,7 @@ build = {
     type = "builtin",
     modules = {
 --        ["telegram"] = "src/main.lua",
+--        ["telegram-api"] = "src/telegram-api.lua",
         ["telegram.api"] = "src/telegram-api.lua"
         
     },
