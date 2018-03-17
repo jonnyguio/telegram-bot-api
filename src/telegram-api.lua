@@ -11,7 +11,7 @@
 local https = require 'ssl.https'
 local JSON = require 'json'
 local multipart = require 'multipart'
-local webhook_module = require './webhook-server'
+local webhook_module = loadfile('./webhook-server')
 
 --[[
     functions to implement
