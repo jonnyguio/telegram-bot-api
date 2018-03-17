@@ -11,6 +11,7 @@
 local https = require 'ssl.https'
 local JSON = require 'json'
 local multipart = require 'multipart'
+local webhook_module = require './webhook-server'
 
 --[[
     functions to implement
@@ -231,9 +232,13 @@ function API:downloadFile(file_id, filename)
 end
 
 -- Set the bot to an specific webhook
--- function API:setWebhook()
---     if not self.updatesOn then
---     end
--- end
+-- Be aware that, to allow a webhook, you're opening a server so that telegram can send requests to you. You should be clearly aware of the risks.
+-- Check Marvel Marvellous Guide to All Things Webhook (https://core.telegram.org/bots/webhooks)
+function API:setWebhook()
+    assert(self.webhook_allowed, 'Error, bot not set to allow webhook.')
+    if not self.webhook then
+        self.webhook = webhook_module.new('localhost', '8081', './')
+    end
+end
 
 return API
