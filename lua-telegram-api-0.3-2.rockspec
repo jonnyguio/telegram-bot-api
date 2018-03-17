@@ -1,8 +1,8 @@
 package = "Lua-Telegram-API"
-version = "0.3-1"
+version = "0.3-2"
 source = {
    url = "git://github.com/jonnyguio/telegram-bot-api",
-   tag = "v0.3.1"
+   tag = "v0.3.2"
 }
 description = {
    summary = "An API to the Telegram Bots, written in Lua.",
